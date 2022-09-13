@@ -2,6 +2,7 @@ import time
 import requests 
 import re
 import cloudscraper 
+import concurrent.futures
 from bs4  import BeautifulSoup
 
 
@@ -38,12 +39,13 @@ def psa_bypasser(psa_url):
 	client = cloudscraper.create_scraper(allow_brotli=False)
 	r = client.get(psa_url)
 	soup = BeautifulSoup(r.text, "html.parser").find_all(class_="dropshadowboxes-drop-shadow dropshadowboxes-rounded-corners dropshadowboxes-inside-and-outside-shadow dropshadowboxes-lifted-both dropshadowboxes-effect-default")
-	for link in soup:
-		try:
-			exit_gate = link.a.get("href")
-			try2link_scrape(exit_gate)
-		except: pass
-			
- 
+	
+	with concurrent.futures.ThreadPoolExecutor() as executor:
+		for link in soup:
+			try:
+				exit_gate = link.a.get("href")
+				executor.submit(try2link_scrape, exit_gate)
+			except: pass
+
  
 psa_bypasser("https://psa.pm/movie/bubble-2022/")
